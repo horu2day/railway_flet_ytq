@@ -30,21 +30,48 @@ async def main(page: ft.Page):
     )
 
     async def analyze_video(e):
-        async with aiohttp.ClientSession() as session:
-            async with session.post('http://localhost:8000/api/youtube/analyze', 
-                json={'url': url_field.value, 'api_key': api_key_field.value}) as resp:
-                result = await resp.json()
-                question_field.value = result['question']
-                answer_text.value = result['answer']
-                page.update()
+        try:
+            async with aiohttp.ClientSession() as session:
+                data = {
+                    'url': url_field.value,
+                    'api_key': api_key_field.value
+                }
+                async with session.post(
+                    'http://localhost:8000/api/youtube/analyze',
+                    json=data
+                ) as resp:
+                    if resp.status == 200:
+                        result = await resp.json()
+                        question_field.value = result['question']
+                        answer_text.value = result['answer']
+                    else:
+                        answer_text.value = f"Error: {resp.status}"
+                    page.update()
+        except Exception as e:
+            answer_text.value = f"Error: {str(e)}"
+            page.update()
 
     async def summarize_video(e):
-        async with aiohttp.ClientSession() as session:
-            async with session.post('http://localhost:8000/api/youtube/summarize',
-                json={'url': url_field.value, 'api_key': api_key_field.value}) as resp:
-                result = await resp.json()
-                answer_text.value = result['summary']
-                page.update()
+        try:
+            async with aiohttp.ClientSession() as session:
+                # params 대신 json으로 데이터 전송
+                data = {
+                    'url': url_field.value,
+                    'api_key': api_key_field.value
+                }
+                async with session.post(
+                    'http://localhost:8000/api/youtube/summarize',
+                    json=data  # json parameter 사용
+                ) as resp:
+                    if resp.status == 200:
+                        result = await resp.json()
+                        answer_text.value = result['summary']
+                    else:
+                        answer_text.value = f"Error: {resp.status}"
+                    page.update()
+        except Exception as e:
+            answer_text.value = f"Error: {str(e)}"
+            page.update()
 
     page.add(
         api_key_field,
